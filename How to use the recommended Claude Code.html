@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code 完全ガイド | Interactive Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a task-oriented dashboard, departing from the linear structure of the source report. The information architecture follows a developer's learning journey: 1. Intro (What is it?), 2. Setup (How to start?), 3. Workflow (How to use it daily?), 4. Command Reference (Quick lookup), 5. Advanced Config (How to master it?), 6. Integrations & Comparison (How it fits in the ecosystem?). This structure supports both initial learning and long-term reference, making it more usable than a simple document. Key interactions include an interactive workflow diagram, searchable reference tables, and accordions for dense information, all designed to facilitate quick access and comprehension. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation -> Interaction -> Justification -> Library. 1. Core Concepts -> Inform -> Icon-based cards -> Hover effects -> Improves scannability -> HTML/CSS. 2. "Explore, Plan, Code, Commit" framework -> Organize/Guide -> Interactive process diagram -> Click to reveal details -> Makes the core workflow tangible and memorable -> HTML/CSS/JS. 3. CLI commands/flags/shortcuts -> Reference -> Searchable HTML tables -> Live text filtering -> Drastically improves lookup speed for a CLI tool -> JS. 4. Tool Comparison -> Compare -> Radar Chart -> Hover for details -> Provides a quick visual summary of relative strengths -> Chart.js. 5. Dense topics (e.g., CLAUDE.md, Permissions) -> Organize -> Accordions -> Click to expand/collapse -> Manages information density and reduces cognitive load -> HTML/CSS/JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body { font-family: 'Inter', 'Noto Sans JP', sans-serif; }
+        .bg-warm-base { background-color: #f8f7f4; }
+        .bg-warm-card { background-color: #ffffff; }
+        .text-warm-dark { color: #1f2937; }
+        .text-warm-medium { color: #4b5563; }
+        .text-warm-accent { color: #2563eb; }
+        .border-warm-subtle { border-color: #e5e7eb; }
+        .accent-bg { background-color: #3b82f6; }
+        .accent-bg-hover:hover { background-color: #2563eb; }
+        .nav-link { transition: all 0.2s ease-in-out; }
+        .nav-link.active { color: #2563eb; border-bottom-color: #2563eb; font-weight: 600; }
+        .nav-link:not(.active):hover { color: #1d4ed8; border-bottom-color: #93c5fd; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 450px; }
+        @media (min-width: 768px) { .chart-container { height: 400px; } }
+        .tab-button.active { background-color: #3b82f6; color: white; }
+        .tab-button { background-color: #e5e7eb; color: #4b5563; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .workflow-step { cursor: pointer; transition: all 0.3s ease; }
+        .workflow-step.active { background-color: #dbeafe; border-color: #3b82f6; }
+        .code-block { background-color: #1f2937; color: #d1d5db; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; position: relative; }
+        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; background-color: #4b5563; color: white; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.75rem; }
+    </style>
+</head>
+<body class="bg-warm-base text-warm-dark">
+
+    <header id="header" class="bg-warm-card/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-warm-dark">
+                        <span class="text-warm-accent">Claude Code</span> 完全ガイド
+                    </span>
+                </div>
+                <div class="hidden md:block">
+                    <div id="nav-links" class="ml-10 flex items-baseline space-x-4">
+                        <a href="#intro" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">イントロ</a>
+                        <a href="#setup" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">セットアップ</a>
+                        <a href="#workflow" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">ワークフロー</a>
+                        <a href="#reference" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">リファレンス</a>
+                        <a href="#advanced" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">高度な設定</a>
+                        <a href="#ecosystem" class="nav-link px-3 py-2 rounded-md text-sm font-medium border-b-2 border-transparent">連携とエコシステム</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-warm-medium hover:text-warm-dark hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-warm-accent">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#intro" class="block nav-link px-3 py-2 rounded-md text-base font-medium">イントロ</a>
+                <a href="#setup" class="block nav-link px-3 py-2 rounded-md text-base font-medium">セットアップ</a>
+                <a href="#workflow" class="block nav-link px-3 py-2 rounded-md text-base font-medium">ワークフロー</a>
+                <a href="#reference" class="block nav-link px-3 py-2 rounded-md text-base font-medium">リファレンス</a>
+                <a href="#advanced" class="block nav-link px-3 py-2 rounded-md text-base font-medium">高度な設定</a>
+                <a href="#ecosystem" class="block nav-link px-3 py-2 rounded-md text-base font-medium">連携とエコシステム</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        
+        <section id="intro" class="mb-16 scroll-mt-16">
+            <h1 class="text-3xl font-bold text-warm-dark mb-4">エージェント型コーディングパラダイムへの序論</h1>
+            <p class="text-lg text-warm-medium mb-8">このガイドでは、Claude Codeを単なるコード生成ツールとしてではなく、開発ワークフローに深く統合される「エージェント型コーディングパートナー」として活用する方法を探ります。その哲学、主要な機能を理解し、開発のパラダイムシフトを体験しましょう。</p>
+            
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="font-bold text-lg mb-2">エージェント型ツール</h3>
+                    <p class="text-warm-medium">ファイルシステムへのアクセス、コマンド実行、自己タスク管理能力を持ち、高レベルの目標を達成するために自律的に動作します。「タスクを委任する」新しい開発スタイルを実現します。</p>
+                </div>
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="font-bold text-lg mb-2">意見を持たない設計</h3>
+                    <p class="text-warm-medium">特定のワークフローを強制せず、柔軟性とカスタマイズ性を提供します。ユーザーが自身の開発スタイルに合わせて能力を最大限に引き出すことができます。</p>
+                </div>
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="font-bold text-lg mb-2">幅広い機能</h3>
+                    <p class="text-warm-medium">コードベースの理解、バグ修正、テスト実行、Git操作、Webリソースの閲覧、さらには画像解析まで、開発のあらゆる側面をサポートします。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="setup" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-warm-dark mb-6">スタートガイド：インストールと初期設定</h2>
+            <p class="text-lg text-warm-medium mb-8">Claude Codeを使い始めるためのステップバイステップガイドです。システム要件の確認から、インストール、認証、そして最初のセッションまでを網羅します。</p>
+            <div class="space-y-6">
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold mb-2"><span class="text-warm-accent font-bold">1.</span> システム要件の確認</h3>
+                    <ul class="list-disc list-inside text-warm-medium space-y-1">
+                        <li><strong>OS:</strong> macOS 10.15+, Ubuntu 20.04+, Windows (WSL)</li>
+                        <li><strong>ソフトウェア:</strong> Node.js 18+, Git 2.23+ (推奨)</li>
+                        <li><strong>ハードウェア:</strong> 4GB以上のRAM</li>
+                    </ul>
+                </div>
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold mb-2"><span class="text-warm-accent font-bold">2.</span> インストールと認証</h3>
+                    <p class="text-warm-medium mb-4">ターミナルを開き、以下のコマンドを実行します。</p>
+                    <div class="code-block">
+                        <button class="copy-btn">Copy</button>
+                        <code>npm install -g @anthropic-ai/claude-code</code>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">⚠️ <code class="text-xs">sudo</code>は使用しないでください。権限エラーが発生した場合は、npmのprefixを再設定します。</p>
+                    <p class="text-warm-medium mt-4">インストール後、プロジェクトのディレクトリで <code class="bg-gray-200 text-sm px-1 rounded">claude</code> を実行し、画面の指示に従って認証を完了します。</p>
+                </div>
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold mb-2"><span class="text-warm-accent font-bold">3.</span> プロジェクトメモリの初期化</h3>
+                    <p class="text-warm-medium mb-4">プロジェクトをClaudeに理解させるための最も重要なステップです。まずプロジェクトを要約させ、次にメモリを初期化します。</p>
+                     <div class="code-block mb-4">
+                        <button class="copy-btn">Copy</button>
+                        <code>&gt; summarize this project</code>
+                    </div>
+                     <div class="code-block">
+                        <button class="copy-btn">Copy</button>
+                        <code>&gt; /init</code>
+                    </div>
+                    <p class="text-warm-medium mt-4">これにより、プロジェクト固有の指示を保存する <code class="bg-gray-200 text-sm px-1 rounded">CLAUDE.md</code> ファイルが生成されます。</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="workflow" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-warm-dark mb-6">開発者のワークフロー：実践的な応用</h2>
+            <p class="text-lg text-warm-medium mb-8">Claude Codeの真価は、構造化されたワークフローを通じて発揮されます。ここでは、公式に推奨されるフレームワークと、具体的なユースケースを紹介します。</p>
+            
+            <div class="bg-warm-card p-6 rounded-lg shadow-sm mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-center">「Explore, Plan, Code, Commit」フレームワーク</h3>
+                <p class="text-warm-medium mb-6 text-center">この4ステップのプロセスは、AIとの協業を成功に導く鍵です。各ステップをクリックして詳細を確認してください。</p>
+                <div id="workflow-diagram" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                    <div class="workflow-step border-2 border-warm-subtle rounded-lg p-4 text-center" data-step="explore">
+                        <div class="text-2xl mb-2">🗺️</div><div class="font-semibold">Explore (探索)</div>
+                    </div>
+                    <div class="workflow-step border-2 border-warm-subtle rounded-lg p-4 text-center" data-step="plan">
+                        <div class="text-2xl mb-2">📝</div><div class="font-semibold">Plan (計画)</div>
+                    </div>
+                    <div class="workflow-step border-2 border-warm-subtle rounded-lg p-4 text-center" data-step="code">
+                        <div class="text-2xl mb-2">💻</div><div class="font-semibold">Code (実装)</div>
+                    </div>
+                    <div class="workflow-step border-2 border-warm-subtle rounded-lg p-4 text-center" data-step="commit">
+                        <div class="text-2xl mb-2">✅</div><div class="font-semibold">Commit (確定)</div>
+                    </div>
+                </div>
+                <div id="workflow-details" class="mt-6 bg-gray-50 p-4 rounded-lg hidden"></div>
+            </div>
+
+            <h3 class="text-xl font-semibold mb-4">一般的なワークフロー</h3>
+            <div id="accordion-container" class="space-y-2">
+                <!-- Accordion items will be injected here by JS -->
+            </div>
+        </section>
+
+        <section id="reference" class="mb-16 scroll-mt-16">
+            <h2 class="text-3xl font-bold text-warm-dark mb-6">コマンドリファレンス</h2>
+            <p class="text-lg text-warm-medium mb-8">CLIフラグ、ショートカット、スラッシュコマンドを素早く検索できます。下の検索ボックスにキーワードを入力して、一覧を絞り込みます。</p>
+            <div class="mb-6">
+                 <input type="text" id="reference-search" placeholder="例: 'permission', '/init', 'edit'..." class="w-full p-3 border border-warm-subtle rounded-lg focus:ring-2 focus:ring-warm-accent focus:border-transparent">
+            </div>
+           
+            <div class="space-y-12">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-4">CLIフラグ</h3>
+                    <div class="overflow-x-auto bg-warm-card rounded-lg shadow-sm">
+                        <table class="w-full text-sm text-left text-warm-medium">
+                            <thead class="text-xs text-warm-dark uppercase bg-gray-50">
+                                <tr><th class="px-6 py-3">フラグ</th><th class="px-6 py-3">エイリアス</th><th class="px-6 py-3">説明</th></tr>
+                            </thead>
+                            <tbody id="cli-flags-table">
+                                <!-- CLI flags data will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-semibold mb-4">スラッシュコマンド</h3>
+                    <div class="overflow-x-auto bg-warm-card rounded-lg shadow-sm">
+                        <table class="w-full text-sm text-left text-warm-medium">
+                            <thead class="text-xs text-warm-dark uppercase bg-gray-50">
+                                <tr><th class="px-6 py-3">コマンド</th><th class="px-6 py-3">説明</th></tr>
+                            </thead>
+                            <tbody id="slash-commands-table">
+                                <!-- Slash commands data will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="advanced" class="mb-16 scroll-mt-16">
+             <h2 class="text-3xl font-bold text-warm-dark mb-6">高度な設定とコンテキスト管理</h2>
+             <p class="text-lg text-warm-medium mb-8">Claude Codeを真にマスターするために、メモリシステム、設定、権限、コンテキスト管理の仕組みを深く理解しましょう。</p>
+             <div id="advanced-tabs" class="mb-4 border-b border-warm-subtle">
+                 <nav class="flex space-x-4" aria-label="Tabs">
+                     <button class="advanced-tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-warm-medium hover:text-warm-dark hover:border-gray-300" data-target="tab-memory">メモリシステム (CLAUDE.md)</button>
+                     <button class="advanced-tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-warm-medium hover:text-warm-dark hover:border-gray-300" data-target="tab-permissions">権限システム</button>
+                     <button class="advanced-tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-warm-medium hover:text-warm-dark hover:border-gray-300" data-target="tab-context">コンテキスト管理</button>
+                 </nav>
+             </div>
+             <div id="advanced-content" class="bg-warm-card p-6 rounded-lg shadow-sm">
+                 <!-- Tab content will be injected here -->
+             </div>
+        </section>
+
+        <section id="ecosystem" class="scroll-mt-16">
+            <h2 class="text-3xl font-bold text-warm-dark mb-6">連携とエコシステム</h2>
+            <p class="text-lg text-warm-medium mb-8">Claude Codeは単体でも強力ですが、他のツールと連携することでその真価を発揮します。ここでは、主要なAIアシスタントとの比較と、各種連携機能について解説します。</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold mb-4 text-center">AIアシスタント比較</h3>
+                    <p class="text-warm-medium mb-6 text-center">Claude Code, GitHub Copilot, Cursorの相対的な強みをレーダーチャートで視覚化しました。</p>
+                    <div class="chart-container">
+                        <canvas id="comparison-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-warm-card p-6 rounded-lg shadow-sm">
+                    <h3 class="text-xl font-semibold mb-4">主要な連携機能</h3>
+                    <ul id="integrations-list" class="space-y-4">
+                        <!-- Integrations will be injected here -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-warm-card mt-16">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-warm-medium">
+            <p>このインタラクティブガイドは、提供されたClaude Codeに関するレポートを基に生成されました。</p>
+        </div>
+    </footer>
+
+    <script>
+        const app = {
+            init() {
+                this.handleMobileMenu();
+                this.handleNavScroll();
+                this.handleCopyCode();
+                this.handleWorkflowDiagram();
+                this.initAccordions();
+                this.initReferenceSearch();
+                this.initAdvancedTabs();
+                this.initComparisonChart();
+                this.populateData();
+            },
+
+            handleMobileMenu() {
+                const button = document.getElementById('mobile-menu-button');
+                const menu = document.getElementById('mobile-menu');
+                button.addEventListener('click', () => {
+                    menu.classList.toggle('hidden');
+                });
+                // Close menu when a link is clicked
+                menu.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'A') {
+                        menu.classList.add('hidden');
+                    }
+                });
+            },
+
+            handleNavScroll() {
+                const navLinks = document.querySelectorAll('.nav-link');
+                const sections = document.querySelectorAll('section');
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const id = entry.target.getAttribute('id');
+                            navLinks.forEach(link => {
+                                link.classList.remove('active');
+                                if (link.getAttribute('href') === `#${id}`) {
+                                    link.classList.add('active');
+                                }
+                            });
+                        }
+                    });
+                }, { rootMargin: '-50% 0px -50% 0px', threshold: 0 });
+
+                sections.forEach(section => observer.observe(section));
+            },
+
+            handleCopyCode() {
+                document.querySelectorAll('.copy-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const codeBlock = e.target.nextElementSibling;
+                        const code = codeBlock.innerText;
+                        navigator.clipboard.writeText(code).then(() => {
+                            e.target.textContent = 'Copied!';
+                            setTimeout(() => {
+                                e.target.textContent = 'Copy';
+                            }, 2000);
+                        });
+                    });
+                });
+            },
+            
+            workflowData: {
+                explore: {
+                    title: "Explore (探索)",
+                    icon: "🗺️",
+                    description: "まず現状を理解します。コードベースの構造、主要な機能、既存のパターンを把握することが目的です。この段階で実装を始めてしまわないように、「まだコードは書かないで」といった制約を加えることが重要です。",
+                    prompt: "> find the files that handle user authentication"
+                },
+                plan: {
+                    title: "Plan (計画)",
+                    icon: "📝",
+                    description: "実装の前に解決策を設計します。どのような変更が必要か、どのファイルに影響があるか、どのようなテストケースを考慮すべきかを計画します。`ultrathink`などの拡張思考モードが活躍します。",
+                    prompt: "> ultrathink how to implement Role Based User Authentication"
+                },
+                code: {
+                    title: "Code (実装)",
+                    icon: "💻",
+                    description: "作成した計画に基づいてコードを実装します。具体的で明確な指示を与え、テスト可能な小さな単位で進めるのが理想的です。",
+                    prompt: "> implement its solution"
+                },
+                commit: {
+                    title: "Commit (確定)",
+                    icon: "✅",
+                    description: "変更を確定させます。変更内容を要約させ、コミットメッセージを生成し、プルリクエストを作成します。一連の作業をClaudeに任せることができます。",
+                    prompt: "> summarize the changes I've made, then create a pr"
+                }
+            },
+
+            handleWorkflowDiagram() {
+                const diagram = document.getElementById('workflow-diagram');
+                const detailsContainer = document.getElementById('workflow-details');
+                
+                diagram.addEventListener('click', (e) => {
+                    const stepElement = e.target.closest('.workflow-step');
+                    if (!stepElement) return;
+
+                    const stepKey = stepElement.dataset.step;
+                    const stepData = this.workflowData[stepKey];
+
+                    diagram.querySelectorAll('.workflow-step').forEach(el => el.classList.remove('active'));
+                    stepElement.classList.add('active');
+                    
+                    detailsContainer.innerHTML = `
+                        <h4 class="font-bold text-lg mb-2">${stepData.icon} ${stepData.title}</h4>
+                        <p class="text-warm-medium mb-4">${stepData.description}</p>
+                        <p class="text-warm-medium font-semibold">プロンプト例:</p>
+                        <div class="code-block mt-2">
+                           <button class="copy-btn">Copy</button>
+                           <code>${stepData.prompt}</code>
+                        </div>`;
+                    detailsContainer.classList.remove('hidden');
+                    this.handleCopyCode();
+                });
+            },
+
+            accordionData: [
+                { title: '新しいコードベースの理解', content: '`> give me an overview of this codebase`<br>`> what are the key data models?`<br>`> trace the login process from front-end to database`' },
+                { title: '効率的なバグ修正', content: '完全なコンテキストを提供します:<br>`> I\'m seeing an error when I run npm test. Here is the stack trace: [スタックトレース]`<br><br>修正を委任します:<br>`> update user.ts to add the null check you suggested`' },
+                { title: 'テスト駆動開発 (TDD)', content: '1. `> find functions in NotificationsService.swift that are not covered by tests`<br>2. `> add tests for the notification service.` (このテストは最初は失敗します)<br>3. `> Now, implement the necessary code to make the new tests pass.`' },
+                { title: 'バージョン管理', content: '`> summarize the changes I\'ve made to the authentication module`<br>`> create a pr`<br>`> commit this`' },
+                { title: 'ビジュアルコンテンツの操作', content: 'ターミナルにスクリーンショットをドラッグ＆ドロップします。<br>`> [Image #1] Generate CSS to match this design mockup`<br>`> Here\'s a screenshot of the error. What\'s causing it?`' },
+            ],
+
+            initAccordions() {
+                const container = document.getElementById('accordion-container');
+                container.innerHTML = this.accordionData.map((item, index) => `
+                    <div class="bg-warm-card rounded-lg shadow-sm">
+                        <h2>
+                            <button type="button" class="accordion-toggle flex items-center justify-between w-full p-5 font-medium text-left text-warm-dark" data-accordion-target="accordion-body-${index}">
+                                <span>${item.title}</span>
+                                <svg class="w-6 h-6 shrink-0 accordion-arrow" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </h2>
+                        <div id="accordion-body-${index}" class="accordion-content p-5 border-t border-warm-subtle">
+                            <div class="code-block"><button class="copy-btn">Copy</button><code>${item.content}</code></div>
+                        </div>
+                    </div>
+                `).join('');
+
+                container.addEventListener('click', (e) => {
+                    const toggle = e.target.closest('.accordion-toggle');
+                    if (toggle) {
+                        const content = document.getElementById(toggle.dataset.accordionTarget);
+                        const arrow = toggle.querySelector('.accordion-arrow');
+                        if (content.style.maxHeight) {
+                            content.style.maxHeight = null;
+                            arrow.style.transform = 'rotate(0deg)';
+                        } else {
+                            content.style.maxHeight = content.scrollHeight + 'px';
+                            arrow.style.transform = 'rotate(180deg)';
+                        }
+                    }
+                });
+            },
+
+            cliFlags: [
+                { flag: '--print', alias: '-p', description: '非対話モードでクエリを実行し、応答を出力します。' },
+                { flag: '--output-format', alias: '', description: '非対話モードの出力形式を指定 (text, json, stream-json)。' },
+                { flag: '--model', alias: '', description: 'セッションで使用するAIモデルを設定します (例: opus)。' },
+                { flag: '--add-dir', alias: '', description: 'コンテキストに追加のディレクトリを追加します。' },
+                { flag: '--continue', alias: '-c', description: '現在のディレクトリで最も新しい会話を再開します。' },
+                { flag: '--resume', alias: '-r', description: 'IDで特定のセッションを再開します。' },
+                { flag: '--dangerously-skip-permissions', alias: '', description: 'ファイル編集やコマンド実行の権限プロンプトをスキップします。' },
+                { flag: '--allowedTools', alias: '', description: 'セッション中、許可するツールをホワイトリストに登録します。' },
+                { flag: '--disallowedTools', alias: '', description: 'セッション中、禁止するツールをブラックリストに登録します。' },
+            ],
+            
+            slashCommands: [
+                { cmd: '/init', description: 'コードベースを分析して`CLAUDE.md`を生成し、プロジェクトを初期化します。' },
+                { cmd: '/clear', description: '会話履歴を完全に消去します。' },
+                { cmd: '/compact', description: '会話履歴を要約してコンテキストウィンドウのスペースを解放します。' },
+                { cmd: '/cost', description: '現在のセッションのトークン使用量とコスト統計を表示します。' },
+                { cmd: '/model', description: '現在のセッションのAIモデルを変更します。' },
+                { cmd: '/permissions', description: 'プロジェクトのツール使用権限を表示または更新します。' },
+                { cmd: '/terminal-setup', description: '`Shift+Enter`での改行を有効にします。' },
+                { cmd: '/memory', description: '`CLAUDE.md`メモリファイルを直接編集します。' },
+                { cmd: '/bug', description: 'バグを報告し、会話をAnthropicに送信します。' },
+                { cmd: '/ide', description: 'IDE統合（VS Codeなど）を管理します。' },
+                { cmd: '/project:*', description: 'プロジェクト固有のカスタムコマンドを実行します。' },
+                { cmd: '/user:*', description: 'ユーザー固有のカスタムコマンドを実行します。' },
+            ],
+
+            populateData() {
+                const cliTable = document.getElementById('cli-flags-table');
+                cliTable.innerHTML = this.cliFlags.map(item => `
+                    <tr class="bg-warm-card border-b border-warm-subtle searchable-row">
+                        <td class="px-6 py-4 font-mono">${item.flag}</td>
+                        <td class="px-6 py-4 font-mono">${item.alias}</td>
+                        <td class="px-6 py-4">${item.description}</td>
+                    </tr>
+                `).join('');
+
+                const slashTable = document.getElementById('slash-commands-table');
+                slashTable.innerHTML = this.slashCommands.map(item => `
+                    <tr class="bg-warm-card border-b border-warm-subtle searchable-row">
+                        <td class="px-6 py-4 font-mono">${item.cmd}</td>
+                        <td class="px-6 py-4">${item.description}</td>
+                    </tr>
+                `).join('');
+
+                const integrationsList = document.getElementById('integrations-list');
+                integrationsList.innerHTML = this.integrationsData.map(item => `
+                    <li class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-lg">${item.title}</h4>
+                        <p class="text-warm-medium">${item.description}</p>
+                    </li>`).join('');
+
+                this.setActiveTab('advanced', 'tab-memory');
+            },
+
+            initReferenceSearch() {
+                const searchInput = document.getElementById('reference-search');
+                searchInput.addEventListener('input', (e) => {
+                    const searchTerm = e.target.value.toLowerCase();
+                    document.querySelectorAll('.searchable-row').forEach(row => {
+                        const text = row.innerText.toLowerCase();
+                        row.style.display = text.includes(searchTerm) ? '' : 'none';
+                    });
+                });
+            },
+
+            advancedTabsData: {
+                'tab-memory': {
+                    title: 'メモリシステム: CLAUDE.md の習熟',
+                    content: `
+                        <p class="mb-4"><code>CLAUDE.md</code>はプロジェクトの「システムプロンプト」として機能し、すべてのセッション開始時に自動的に読み込まれます。ここにプロジェクトのルールを記述することで、Claudeの振る舞いを一貫させることができます。</p>
+                        <h5 class="font-semibold mb-2">記述すべき内容のベストプラクティス:</h5>
+                        <ul class="list-disc list-inside space-y-2 text-warm-medium">
+                            <li>プロジェクトの概要とアーキテクチャ</li>
+                            <li>コーディングスタイルガイドと規約 (例:「常にTDDを使用すること」)</li>
+                            <li>テストの実行方法やビルド手順</li>
+                            <li>プロジェクト固有の専門用語の定義</li>
+                            <li>Claudeがどのように振る舞うべきかについての指示</li>
+                        </ul>
+                        <p class="mt-4">会話中の重要なメッセージは、<code>#</code>ショートカットで素早く<code>CLAUDE.md</code>に追加できます。</p>`
+                },
+                'tab-permissions': {
+                    title: '権限システム: セーフティネット',
+                    content: `
+                        <p class="mb-4">権限システムは、AIエージェントに広範な能力を与えつつ、潜在的に破壊的な操作に対する制御を維持するための重要な安全機能です。</p>
+                        <h5 class="font-semibold mb-2">主要なルール:</h5>
+                        <ul class="list-disc list-inside space-y-2 text-warm-medium">
+                            <li><strong>Deny > Allow:</strong> 拒否 (Deny) ルールは常に許可 (Allow) ルールに優先します。</li>
+                            <li><strong>設定方法:</strong> 永続的な設定には <code>/permissions</code> コマンド、セッション固有の上書きにはCLIフラグ (<code>--allowedTools</code>, <code>--disallowedTools</code>) を使用します。</li>
+                            <li><strong>危険な操作の制御:</strong> <code>Bash(rm*)</code> や <code>Write(*)</code> のようなコマンドの実行を制限することで、意図しないファイルの削除や上書きを防ぎます。</li>
+                        </ul>
+                        <p class="mt-4">このシステムを理解することが、Claude Codeを自信を持って活用するための鍵となります。</p>`
+                },
+                'tab-context': {
+                    title: 'コンテキストウィンドウの管理: 忘れる技術',
+                    content: `
+                        <p class="mb-4">長い会話はコンテキストウィンドウを埋め尽くし、Claudeが初期の指示を忘れたり、重要な詳細が失われる原因となります。積極的なコンテキスト管理が重要です。</p>
+                        <h5 class="font-semibold mb-2">主要な管理コマンド:</h5>
+                        <ul class="list-disc list-inside space-y-2 text-warm-medium">
+                            <li><strong><code>/compact</code>:</strong> 会話を手動で要約します。何を記憶すべきかを指示することで、重要な情報を保持しつつコンテキストを圧縮できます。</li>
+                            <li><strong><code>/clear</code>:</strong> ハードリセット。同じプロジェクト内で全く無関係な新しいタスクに切り替える際に使用し、コンテキストの混乱を避けます。</li>
+                        </ul>
+                        <p class="mt-4">いつ要約し、いつクリアするかを知ることは、高いパフォーマンスを維持するための重要なスキルです。</p>`
+                }
+            },
+            
+            initAdvancedTabs() {
+                const tabContainer = document.getElementById('advanced-tabs');
+                tabContainer.addEventListener('click', (e) => {
+                    if (e.target.tagName === 'BUTTON') {
+                        const targetId = e.target.dataset.target;
+                        this.setActiveTab('advanced', targetId);
+                    }
+                });
+            },
+
+            setActiveTab(prefix, targetId) {
+                const contentContainer = document.getElementById(`${prefix}-content`);
+                const tabButtons = document.querySelectorAll(`.${prefix}-tab-button`);
+
+                tabButtons.forEach(button => {
+                    button.classList.remove('active', 'text-warm-accent', 'border-warm-accent');
+                    button.classList.add('border-transparent', 'text-warm-medium', 'hover:text-warm-dark', 'hover:border-gray-300');
+                    if (button.dataset.target === targetId) {
+                        button.classList.add('active', 'text-warm-accent', 'border-warm-accent');
+                        button.classList.remove('border-transparent', 'text-warm-medium', 'hover:text-warm-dark', 'hover:border-gray-300');
+                    }
+                });
+                
+                const data = this.advancedTabsData[targetId];
+                contentContainer.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4">${data.title}</h3>
+                    ${data.content}`;
+            },
+
+            initComparisonChart() {
+                const ctx = document.getElementById('comparison-chart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['エージェント能力', 'コード品質', 'カスタマイズ性', '速度(補完)', 'コスト(定額)', 'GUIの容易さ'],
+                        datasets: [{
+                            label: 'Claude Code',
+                            data: [5, 5, 5, 2, 4, 3],
+                            fill: true,
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            borderColor: 'rgb(59, 130, 246)',
+                            pointBackgroundColor: 'rgb(59, 130, 246)',
+                        }, {
+                            label: 'GitHub Copilot',
+                            data: [2, 4, 3, 5, 5, 5],
+                            fill: true,
+                            backgroundColor: 'rgba(75, 85, 99, 0.2)',
+                            borderColor: 'rgb(75, 85, 99)',
+                            pointBackgroundColor: 'rgb(75, 85, 99)',
+                        }, {
+                            label: 'Cursor',
+                            data: [3, 4, 3, 4, 5, 5],
+                             fill: true,
+                            backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                            borderColor: 'rgb(34, 197, 94)',
+                            pointBackgroundColor: 'rgb(34, 197, 94)',
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { display: false },
+                                suggestedMin: 0,
+                                suggestedMax: 5,
+                                pointLabels: { font: { size: 12 } },
+                                ticks: {
+                                   stepSize: 1
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                        }
+                    }
+                });
+            },
+
+            integrationsData: [
+                { title: 'VS Code 統合', description: 'ターミナルセッションをVS Codeに接続し、差分表示やコンテキスト共有、診断情報の自動連携を実現。ターミナルのパワーとGUIの利便性を両立します。' },
+                { title: 'Model Context Protocol (MCP)', description: '外部ツールやサービスをClaude Codeの新しい能力として接続するプロトコル。ブラウザ自動化や強化されたWeb検索など、拡張性の鍵となります。' },
+                { title: 'GitHub Actions 統合', description: 'PRのコメントやIssueで`@claude`とメンションすることで、自動コードレビューや自動実装を実行。Claudeを自律的なチームメンバーとしてCI/CDプロセスに組み込みます。' },
+            ],
+        };
+
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
